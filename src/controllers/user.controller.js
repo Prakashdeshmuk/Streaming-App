@@ -13,7 +13,7 @@ const registerUser = asyncHandler(async (req,res)=>{
     // check if user exist or not
     // user is not exist then create object of user and upload on db
     // user is created sucessfully then return responce
-
+    //console.log(req.body);
     const {username,email,fullName,password} = req.body;
 
     //console.log(email);
@@ -34,12 +34,21 @@ const registerUser = asyncHandler(async (req,res)=>{
         throw new ApiError(409,"User is Already Exist")
     }
 
+    //console.log(req.files);
+
     const avatarLocalpath = req.files?.avatar[0]?.path
-    const coverImagepath = req.files?.coverImage[0]?.path;
+    //const coverImagepath = req.files?.coverImage[0]?.path;
+
+    let coverImagepath;
+
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length>0)
+    {
+        coverImagepath = req.files?.coverImage[0]?.path;
+    }
 
     if(!avatarLocalpath)
     {
-        throw ApiError(400,"Avatar is Required");
+        throw new ApiError(400,"Avatar is Required");
     }
 
     const avatar  = await uploadOnCloudinary(avatarLocalpath);
@@ -47,16 +56,16 @@ const registerUser = asyncHandler(async (req,res)=>{
 
     if(!avatar)
     {
-        throw ApiError(400,"Avatar is not uploaded on cloudinary");
+        throw new ApiError(400,"Avatar is not uploaded on cloudinary");
     }
 
     const user = await User.create({
         fullName,
-        avatar:avatar.url,
-        coverImage:coverImage.url || "",
-        email,
         password,
-        username:username.toLowercase()
+        avatar:avatar.url,
+        coverImage:coverImage?.url || "",
+        email,
+        username:username.toLowerCase()
     })
 
     const createdUser = await User.findById(user._id).select(
@@ -73,7 +82,6 @@ const registerUser = asyncHandler(async (req,res)=>{
     )
 
 
-    
 })
 
 export {registerUser}

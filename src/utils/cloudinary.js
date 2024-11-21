@@ -17,13 +17,16 @@ const uploadOnCloudinary = async(localfilepath)=>{
             resource_type:"auto"
         });
 
+        // console.log("Files uploaded Sucessfully");
+        // console.log(response);
+
         fs.unlinkSync(localfilepath);
 
         return response
         
     } catch (error) {
+        console.log("There Issue in the problem upload Image");
         fs.unlinkSync(localfilepath);
-        
         return null
     }
 }
