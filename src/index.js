@@ -3,8 +3,9 @@ import connectDB from "./db/index.js";
 import {app} from "./app.js"
 
 dotenv.config({
-    path:'./env'
+    path:'./.env'
 })
+
 
 connectDB()
 .then(()=>
@@ -15,10 +16,12 @@ connectDB()
         console.log("Error in Express App Listening",error)
         throw error
     })
+
+    const PORT = process.env.PORT || 4000;
     
-    app.listen(process.env.PORT || 8000,(req,res)=>
+    app.listen(PORT,(req,res)=>
     {
-        console.log(`App is Listening on Port ${process.env.PORT}`)
+        console.log(`App is Listening on Port ${PORT}`)
     })
 })
 .catch((error)=>{
