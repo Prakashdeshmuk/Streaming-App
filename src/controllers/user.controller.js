@@ -236,6 +236,47 @@ const refershAccessToken = asyncHandler(async(req,res)=>{
 
 })
 
+const changeCurrentPassword = asyncHandler(async (req,res)=>
+{
+    // get old password and new password from user
+    // as we are changing password of login user 
+    // we have information user via access token
+    // find user in the database based id of user
+    // check user password with old password
+
+    const {oldPassword,newPassword} = req.body;
+
+    // verify jwt add req.user.id
+
+    const user = await User.findById(req.user?._id);
+
+    const passwordcorrect = await user.isPasswordcorrect(oldPassword);
+
+    if(!passwordcorrect)
+    {
+        throw new ApiError("Invalid Old Password");
+    }
+
+    user.password = newPassword;
+
+    await user.save({validateBeforeSave:false})
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,{},"Password is Updated")
+    )
+})
+
+const getCurrentUser = asyncHandler(async(req,res)=>
+{
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,req.user,"User Feteched Sucessfully")
+    )
+})
 
 
-export {registerUser,loginUser,logoutUser,refershAccessToken}
+
+export {registerUser,loginUser,logoutUser,refershAccessToken,changeCurrentPassword,getCurrentUser}
