@@ -4,6 +4,7 @@ import {User} from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import {verifyJWT} from "../middlewares/auth.middleware.js"
+import { verify } from "jsonwebtoken"
 
 const generateAccessTokenandRefershToken = async (userId)=>{
 
@@ -179,6 +180,62 @@ const logoutUser = asyncHandler(async (req,res)=>{
     .json(new ApiResponse(200,{},"User logout Sucessfully"))
 })
 
+const refershAccessToken = asyncHandler(async(req,res)=>{
+
+    // hit the endpoint and referesh the access token
+    // user having in cookies 
+    // user having doken than decode 
+
+    const incomingToken = req.cookies.refreshToken || req.body.refreshToken;
+
+    if(!incomingToken)
+    {
+        throw new ApiError(400,"Unauthorized Token(from cookies)");
+    }
+
+    try {
+        const decodetoken = await verify.jwt(incomingToken,process.env.REFRESH_TOKEN_SECRET)
+    
+        if(!decodetoken) throw new ApiError(400,"Invalid refresh Token or token is Expired");
+    
+        const user= await User.findById(decodetoken?._id);
+    
+        if(!user)
+        {
+            throw new ApiError(400,"Token is Invalid");
+        }
+    
+        if(user?.AccessToken!==incomingToken)
+        {
+            throw new ApiError("400","Token is Invalid or Expired");
+        }
+    
+        const {accessToken,newrefershToken} = await generateAccessTokenandRefershToken(userId);
+    
+        const options = {
+            httpOnly:true,
+            secure:true
+        }
+    
+        return res
+        .status(200)
+        .cookie("accessToken",accessToken,options)
+        .cookie("refershToken",newrefershToken,options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    accessToken,refershToken:newrefershToken
+                },
+                "Access Token Is refreshed"
+            )
+        )
+    } catch (error) {
+        throw new ApiError(400,"Something went wrong while Refershing Token");
+    }
+
+})
 
 
-export {registerUser,loginUser,logoutUser}
+
+export {registerUser,loginUser,logoutUser,refershAccessToken}
