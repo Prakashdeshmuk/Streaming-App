@@ -277,6 +277,105 @@ const getCurrentUser = asyncHandler(async(req,res)=>
     )
 })
 
+const updateAccontDetails = asyncHandler(async (req,res)=>
+{
+    // updating email and fullName of User
+    // req.body->fullName,email
+    // we already user id with us because updating details of user who logged in
+
+    const {fullName,email} = req.body;
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:
+            {
+                fullName,email
+            }
+        },
+        {
+            new:true
+        }
+    ).select("-password")
+
+    return res.status(200)
+    .json(new ApiResponse(
+        200,user,"Update The Account Details"
+    ));
+
+})
+
+const updateUserAvatar = asyncHandler(async(req,res)=>
+{
+    const avatarpath = req.file?.path;
+
+    if(!avatarpath)
+    {
+        throw new ApiError(400,"First Upload new Avatar");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarpath);
+
+    if(!avatar.url)
+    {
+        throw new ApiError(400,"There isssue to uploading Avatar on cloudinary");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            avatar:avatar.url
+        },
+        {
+            new:true
+        }
+    ).select("-password")
+
+    return res.status(200)
+    .json(new ApiResponse(200,user,"Avatar is Updated"));
+})
+
+const updateUserCoverImage = asyncHandler(async(req,res)=>
+    {
+        const coverImagepath = req.file?.path;
+    
+        if(!coverImagepath)
+        {
+            throw new ApiError(400,"Cover Image is not found in Files, first upload the cover Image");
+        }
+    
+        const coverImage = await uploadOnCloudinary(coverImagepath);
+    
+        if(!coverImage.url)
+        {
+            throw new ApiError(400,"There isssue to uploading Cover Image on cloudinary");
+        }
+    
+        const user = await User.findByIdAndUpdate(
+            req.user?._id,
+            {
+                coverImage:coverImage.url
+            },
+            {
+                new:true
+            }
+        ).select("-password")
+    
+        return res.status(200)
+        .json(new ApiResponse(200,user,"Cover Image is Updated"));
+    })
 
 
-export {registerUser,loginUser,logoutUser,refershAccessToken,changeCurrentPassword,getCurrentUser}
+
+export
+ {
+    registerUser,
+    loginUser,
+    logoutUser,
+    refershAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccontDetails,
+    updateUserAvatar,
+    updateUserCoverImage
+  }
